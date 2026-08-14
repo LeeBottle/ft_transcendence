@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "build": "nest build",
-    "start:dev": "prisma generate && prisma db push && nest start --watch"
+    "start:dev": "prisma generate && prisma db push && prisma db seed && nest start --watch"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -23,6 +26,7 @@
     "@nestjs/cli": "^10.0.0",
     "@types/node": "^20.0.0",
     "prisma": "^5.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
   }
 }

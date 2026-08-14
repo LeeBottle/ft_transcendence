@@ -1,8 +1,25 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import HomePage from './pages/HomePage';
+import Menu1Page from './pages/Menu1Page';
+import Menu2Page from './pages/Menu2Page';
+import Menu3Page from './pages/Menu3Page';
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold mb-4">ft_transcendence</h1>
-      <p className="text-gray-400">프론트엔드(React + Tailwind) 정상 동작 중!</p>
-    </div>
+    <BrowserRouter>
+      <div>
+        <Navbar />
+
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/menu1" element={<Menu1Page />} />
+            <Route path="/menu2" element={<Menu2Page />} />
+            <Route path="/menu3" element={<Menu3Page />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }

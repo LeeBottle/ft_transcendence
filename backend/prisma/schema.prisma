@@ -16,3 +16,36 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Room {
+  id             String   @id @default(uuid())
+  title          String   // 방 제목
+  hostNickname   String   // 방장의 닉네임
+  password       String?  // 방 비밀번호 (비공개/비밀번호 방일 경우)
+  isPublic       Boolean  @default(true) // 방 공개 여부 (true: 공개, false: 비공개)
+  currentPlayers Int      @default(1) // 현재 인원수 (방 생성 시 방장 1명)
+  maxPlayers     Int      @default(2) // 최대 인원수
+  isGameStart    Boolean  @default(false) // 게임 시작 여부
+  createdAt      DateTime @default(now())
+
+  // Slot 1 (방장)
+  slot1Ready     Boolean  @default(false)
+
+  // Slot 2 설정
+  slot2Open      Boolean  @default(true)  // 슬롯 열림 여부 (참여 허용 or AI)
+  slot2IsAi      Boolean  @default(false) // AI 여부
+  slot2Nick      String?                  // 입장한 유저 닉네임 (null이면 빈자리)
+  slot2Ready     Boolean  @default(false)
+
+  // Slot 3 설정
+  slot3Open      Boolean  @default(false)
+  slot3IsAi      Boolean  @default(false)
+  slot3Nick      String?
+  slot3Ready     Boolean  @default(false)
+
+  // Slot 4 설정
+  slot4Open      Boolean  @default(false)
+  slot4IsAi      Boolean  @default(false)
+  slot4Nick      String?
+  slot4Ready     Boolean  @default(false)
+}
