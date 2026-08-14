@@ -54,5 +54,15 @@ services:
       - frontend
       - backend
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: transcendence_tunnel
+    restart: always
+    command: tunnel --url http://nginx:80
+    depends_on:
+      - nginx
+    profiles:
+      - tunnel
+
 volumes:
   pgdata:
