@@ -1,36 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-const DUMMY_USERS = [
-  { id: '1', nickname: 'a', email: 'a@test.com' },
-  { id: '2', nickname: 'b', email: 'b@test.com' },
-  { id: '3', nickname: 'c', email: 'c@test.com' },
-  { id: '4', nickname: 'd', email: 'd@test.com' },
-];
+interface LoggedUser {
+  id: string;
+  email: string;
+  nickname: string;
+}
 
 export default function Navbar() {
-  const [currentUser, setCurrentUser] = useState<typeof DUMMY_USERS[0] | null>(null);
+  const navigate = useNavigate();
+  const [authProfile, setAuthProfile] = useState<LoggedUser | null>(null);
+
+  const loadAuth = () => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setAuthProfile(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('user');
+        setAuthProfile(null);
+      }
+    } else {
+      setAuthProfile(null);
+    }
+  };
 
   useEffect(() => {
-    // 탭 개별 저장소인 sessionStorage에서 유저 정보 불러오기
-    const saved = sessionStorage.getItem('currentUser');
-    if (saved) {
-      setCurrentUser(JSON.parse(saved));
-    } else {
-      // 기본값: 첫 번째 탭은 유저 a 로 설정
-      sessionStorage.setItem('currentUser', JSON.stringify(DUMMY_USERS[0]));
-      setCurrentUser(DUMMY_USERS[0]);
-    }
+    loadAuth();
+    window.addEventListener('auth-change', loadAuth);
+    return () => window.removeEventListener('auth-change', loadAuth);
   }, []);
 
-  const handleSelectUser = (userId: string) => {
-    const user = DUMMY_USERS.find((u) => u.id === userId);
-    if (user) {
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
-      setCurrentUser(user);
-      // 유저 변경 시 페이지 새로고침하여 소켓/상태 재연결
-      window.location.reload();
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth-change'));
+    navigate('/login');
   };
 
   return (
@@ -40,22 +45,6 @@ export default function Navbar() {
       </h1>
 
       <div className="flex gap-6 items-center">
-        {/* 개발 테스트용 유저 선택 셀렉트 박스 */}
-        <div className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-md text-sm text-white">
-          <span>👤 테스트 로그인:</span>
-          <select
-            value={currentUser?.id || '1'}
-            onChange={(e) => handleSelectUser(e.target.value)}
-            className="bg-gray-900 text-white px-2 py-1 rounded border border-gray-600 cursor-pointer"
-          >
-            {DUMMY_USERS.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.nickname} ({user.email})
-              </option>
-            ))}
-          </select>
-        </div>
-
         <Link to="/" className="text-gray-300 hover:text-white font-medium">
           홈
         </Link>
@@ -68,6 +57,31 @@ export default function Navbar() {
         <Link to="/menu3" className="text-gray-300 hover:text-white font-medium">
           메뉴 3
         </Link>
+
+        {authProfile ? (
+          <div className="flex items-center gap-3 bg-gray-900 px-3 py-1.5 rounded-full border border-green-500 text-sm">
+            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+            <span className="text-white font-semibold">{authProfile.nickname} 님</span>
+            <button
+              onClick={handleLogout}
+              className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded transition"
+            >
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-3 items-center">
+            <Link to="/login" className="text-gray-300 hover:text-white font-medium">
+              로그인
+            </Link>
+            <Link
+              to="/signup"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition"
+            >
+              회원가입
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );
