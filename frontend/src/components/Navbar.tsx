@@ -5,6 +5,7 @@ interface LoggedUser {
   id: string;
   email: string;
   nickname: string;
+  title?: string;
 }
 
 export default function Navbar() {
@@ -59,8 +60,11 @@ export default function Navbar() {
         </Link>
 
         {authProfile ? (
-          <div className="flex items-center gap-3 bg-gray-900 px-3 py-1.5 rounded-full border border-green-500 text-sm">
+          <div className="flex items-center gap-3 bg-gray-900 px-3.5 py-1.5 rounded-full border border-green-500 text-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+            <span className="text-xs bg-blue-900/80 text-blue-300 px-2 py-0.5 rounded-md border border-blue-700 font-semibold">
+              🏆 {authProfile.title || '초급 슬라이더'}
+            </span>
             <span className="text-white font-semibold">{authProfile.nickname} 님</span>
             <button
               onClick={handleLogout}

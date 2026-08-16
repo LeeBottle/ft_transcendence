@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import PuzzleCaptcha from '../components/PuzzleCaptcha';
+import TitleUnlockModal from '../components/TitleUnlockModal';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [showCaptchaModal, setShowCaptchaModal] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [unlockedTitle, setUnlockedTitle] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,10 +48,17 @@ export default function LoginPage() {
         window.dispatchEvent(new Event('auth-change'));
       }
 
-      setMessage({ type: 'success', text: '로그인 성공! 이동 중...' });
-      setTimeout(() => {
+      const earnedTitle = data.user.title || '초급 슬라이더';
+
+      if (data.isNewTitle) {
+        setUnlockedTitle(earnedTitle);
+        setMessage({ type: 'success', text: `축하합니다! [${earnedTitle}] 칭호를 획득하셨습니다!` });
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
         navigate('/');
-      }, 600);
+      }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -63,7 +72,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center py-12 px-4">
+    <div className="flex items-center justify-center py-12 px-4 relative">
+      <TitleUnlockModal title={unlockedTitle} onClose={() => setUnlockedTitle(null)} />
+
       <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">로그인</h2>
 

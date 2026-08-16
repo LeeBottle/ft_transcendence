@@ -34,6 +34,8 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         nickname: dto.nickname,
+        title: '초급 슬라이더',
+        isTitleSeen: false,
       },
     });
 
@@ -57,6 +59,15 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
     }
 
+    const isNewTitle = !user.isTitleSeen;
+
+    if (isNewTitle) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isTitleSeen: true },
+      });
+    }
+
     const payload = { sub: user.id, email: user.email, nickname: user.nickname };
     const accessToken = this.jwtService.sign(payload);
 
@@ -64,7 +75,11 @@ export class AuthService {
     return {
       message: '로그인에 성공했습니다.',
       accessToken,
-      user: result,
+      isNewTitle,
+      user: {
+        ...result,
+        isTitleSeen: true,
+      },
     };
   }
 }

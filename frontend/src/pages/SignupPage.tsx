@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import PuzzleCaptcha from '../components/PuzzleCaptcha';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -10,8 +9,6 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
   });
-  const [showCaptchaModal, setShowCaptchaModal] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -19,7 +16,7 @@ export default function SignupPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
@@ -28,12 +25,6 @@ export default function SignupPage() {
       return;
     }
 
-    setIsVerified(false);
-    setShowCaptchaModal(true);
-  };
-
-  const executeSignup = async () => {
-    setShowCaptchaModal(false);
     setIsSubmitting(true);
 
     try {
@@ -63,11 +54,6 @@ export default function SignupPage() {
     }
   };
 
-  const handleCaptchaVerified = () => {
-    setIsVerified(true);
-    executeSignup();
-  };
-
   return (
     <div className="flex items-center justify-center py-12 px-4">
       <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-md">
@@ -83,7 +69,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">이메일</label>
             <input
@@ -152,23 +138,6 @@ export default function SignupPage() {
           </Link>
         </p>
       </div>
-
-      {/* 퍼즐 인간검증 모달 팝업 */}
-      {showCaptchaModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl shadow-2xl relative max-w-sm w-full">
-            <button
-              type="button"
-              onClick={() => setShowCaptchaModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white font-bold text-lg"
-            >
-              ✕
-            </button>
-            <h3 className="text-lg font-bold mb-4 text-center text-white">보안 검증</h3>
-            <PuzzleCaptcha isVerified={isVerified} onVerify={handleCaptchaVerified} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
