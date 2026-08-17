@@ -1,24 +1,27 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const dummyUsers = [
-    { id: '1', nickname: 'a', email: 'a@test.com', password: 'dummy_password' },
-    { id: '2', nickname: 'b', email: 'b@test.com', password: 'dummy_password' },
-    { id: '3', nickname: 'c', email: 'c@test.com', password: 'dummy_password' },
-    { id: '4', nickname: 'd', email: 'd@test.com', password: 'dummy_password' },
-  ];
+  const hashedPassword = await bcrypt.hash('123456', 10);
 
-  for (const user of dummyUsers) {
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: { nickname: user.nickname },
-      create: user,
-    });
-  }
+  const testUser = {
+    id: 'test-user-id-001',
+    email: 'test@test.com',
+    password: hashedPassword,
+    nickname: '테스터1',
+    title: '초급 슬라이더',
+    isTitleSeen: true,
+  };
 
-  console.log('✅ 테스트용 유저 데이터(1:a, 2:b, 3:c, 4:d)가 생성되었습니다.');
+  await prisma.user.upsert({
+    where: { email: testUser.email },
+    update: { password: testUser.password },
+    create: testUser,
+  });
+
+  console.log('✅ 테스트용 계정 생성 완료! (이메일: test@test.com / 비밀번호: 123456)');
 }
 
 main()

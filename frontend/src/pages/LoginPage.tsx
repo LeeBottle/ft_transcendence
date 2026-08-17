@@ -52,10 +52,6 @@ export default function LoginPage() {
 
       if (data.isNewTitle) {
         setUnlockedTitle(earnedTitle);
-        setMessage({ type: 'success', text: `축하합니다! [${earnedTitle}] 칭호를 획득하셨습니다!` });
-        setTimeout(() => {
-          navigate('/');
-        }, 2000);
       } else {
         navigate('/');
       }
@@ -71,9 +67,14 @@ export default function LoginPage() {
     executeLogin();
   };
 
+  const handleCloseTitleModal = () => {
+    setUnlockedTitle(null);
+    navigate('/');
+  };
+
   return (
     <div className="flex items-center justify-center py-12 px-4 relative">
-      <TitleUnlockModal title={unlockedTitle} onClose={() => setUnlockedTitle(null)} />
+      <TitleUnlockModal title={unlockedTitle} onClose={handleCloseTitleModal} />
 
       <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">로그인</h2>
