@@ -13,7 +13,8 @@
 | **PASSWORD** | `VARCHAR(255)` | | 암호화된 비밀번호 (Bcrypt / OAuth 전용 계정 시 NULL 허용) |
 | **NICKNAME** | `VARCHAR(50)` | **UNIQUE, NOT NULL** | 서비스 닉네임 |
 | **AVATAR_URL** | `VARCHAR(255)` | | 프로필 이미지 경로 |
-| **TITLE** | `VARCHAR(100)` | **DEFAULT '초급 슬라이더'** | 대표 칭호 (예: `초급 슬라이더`, `중급 슬라이더` 등) |
+| **TITLE** | `VARCHAR(100)` | **DEFAULT '초급 슬라이더'** | 획득한 칭호 |
+| **EQUIPPED_TITLE** | `VARCHAR(100)` | | 사용자가 직접 설정한 대표 칭호 (미설정 시 NULL) |
 | **IS_TITLE_SEEN** | `BOOLEAN` | **DEFAULT FALSE** | 칭호 획득 축하 팝업 확인 여부 |
 | **STATUS** | `VARCHAR(20)` | **DEFAULT 'OFFLINE'** | 접속 상태 (`ONLINE`, `OFFLINE`, `IN_GAME`) |
 | **PLAY_COUNT** | `INTEGER` | **DEFAULT 0** | 총 게임 플레이 횟수 |
