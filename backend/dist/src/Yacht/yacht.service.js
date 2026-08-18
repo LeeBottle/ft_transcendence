@@ -205,7 +205,7 @@ let YachtService = class YachtService {
             players,
             dice: initialDice,
             held: [false, false, false, false, false],
-            rollsLeft: 2,
+            rollsLeft: 3,
             isFinished: false,
             winner: null,
         };
@@ -293,7 +293,7 @@ let YachtService = class YachtService {
             Math.floor(Math.random() * 6) + 1,
             Math.floor(Math.random() * 6) + 1,
         ];
-        game.rollsLeft = 2;
+        game.rollsLeft = 3;
     }
     async checkAndExecuteAiTurn(game) {
         return;

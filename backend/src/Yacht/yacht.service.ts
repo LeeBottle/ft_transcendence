@@ -264,7 +264,7 @@ export class YachtService {
       players,
       dice: initialDice,
       held: [false, false, false, false, false],
-      rollsLeft: 2, // 이미 1회 자동 굴림 상태로 시작
+      rollsLeft: 3, // 첫 턴 시작 시 남은 횟수 3번 (수동으로 굴리기 시작)
       isFinished: false,
       winner: null,
     };
@@ -367,7 +367,7 @@ export class YachtService {
       return;
     }
 
-    // 새 턴 주사위 초기화 및 1회 굴림
+    // 새 턴 주사위 초기화 (남은 횟수 3번)
     game.held = [false, false, false, false, false];
     game.dice = [
       Math.floor(Math.random() * 6) + 1,
@@ -376,7 +376,7 @@ export class YachtService {
       Math.floor(Math.random() * 6) + 1,
       Math.floor(Math.random() * 6) + 1,
     ];
-    game.rollsLeft = 2;
+    game.rollsLeft = 3;
   }
 
   // 🤖 AI 턴 자동 수행 로직 (실제 AI 자동 진행 로직 비활성화)

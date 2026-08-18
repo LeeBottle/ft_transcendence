@@ -6,6 +6,7 @@ import {
   calculateScore,
   calculateTotalScore,
 } from './yachtScore';
+import Dice3DCanvas from './Dice3DCanvas';
 
 interface PlayerGameState {
   slotNum: number;
@@ -36,7 +37,10 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
   const [game, setGame] = useState<GameState | null>(null);
   const [held, setHeld] = useState<boolean[]>([false, false, false, false, false]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRolling, setIsRolling] = useState<boolean>(false);
+
   const prevTurnRef = useRef<number | null>(null);
+  const prevDiceRef = useRef<string>('');
 
   useEffect(() => {
     let isMounted = true;
@@ -47,13 +51,24 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
         if (res.ok) {
           const data: GameState = await res.json();
           if (isMounted) {
+            // 주사위 값이 이전과 달라진 경우 (상대방/AI 턴 포함) 3D 굴림 애니메이션 감지
+            // (단, 턴 시작 직후 rollsLeft === 3일 때는 굴리지 않고 1열 정렬 대기)
+            const newDiceStr = JSON.stringify(data.dice);
+            if (prevDiceRef.current && prevDiceRef.current !== newDiceStr && data.rollsLeft < 3) {
+              setIsRolling(true);
+              // 안전을 위한 긴 폴백 타이머 (기본은 3D physics 굴림 완료 감지로 해제됨)
+              setTimeout(() => setIsRolling(false), 3500);
+            }
+            prevDiceRef.current = newDiceStr;
+
             setGame(data);
             setLoading(false);
 
-            // 턴이 바뀌었을 때만 held 초기화
+            // 턴이 바뀌었을 때 (내 턴이 돌아오거나 상대 턴으로 교대 시)
             if (prevTurnRef.current !== data.currentTurnIndex) {
               prevTurnRef.current = data.currentTurnIndex;
               setHeld([false, false, false, false, false]);
+              setIsRolling(false); // 턴 교대 시 굴림 상태 해제하여 1열 정렬 적용
             }
           }
         }
@@ -79,8 +94,11 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
   const cleanPlayerNick = currentPlayer?.nickname.replace(/ \(방장\)$/, '') || '';
   const isMyTurn = !game.isFinished && cleanPlayerNick === myNickname;
 
+  // 굴리기가 1회 이상 진행된 경우(rollsLeft < 3)에만 KEEP 지정 허용
+  const canToggleKeep = isMyTurn && game.rollsLeft > 0 && game.rollsLeft < 3;
+
   const handleToggleHold = (index: number) => {
-    if (!isMyTurn || game.rollsLeft <= 0) return;
+    if (!canToggleKeep) return;
     setHeld((prev) => {
       const next = [...prev];
       next[index] = !next[index];
@@ -89,8 +107,9 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
   };
 
   const handleRollDice = async () => {
-    if (!isMyTurn || game.rollsLeft <= 0) return;
+    if (!isMyTurn || game.rollsLeft <= 0 || isRolling) return;
 
+    setIsRolling(true);
     try {
       const res = await fetch(`/api/yacht/rooms/${roomId}/game/roll`, {
         method: 'POST',
@@ -104,12 +123,18 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
       if (res.ok) {
         const updatedGame: GameState = await res.json();
         setGame(updatedGame);
+        prevDiceRef.current = JSON.stringify(updatedGame.dice);
       } else {
         const err = await res.json();
         alert(err.message || '주사위를 굴릴 수 없습니다.');
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      // 3.5초 안전 폴백 타이머 (실제로는 3D 물리 정지 이벤트 onRollComplete로 약 1.5~2초만에 해제됨)
+      setTimeout(() => {
+        setIsRolling(false);
+      }, 3500);
     }
   };
 
@@ -193,7 +218,7 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
 
       {/* 2컬럼 레이아웃: 왼쪽 (족보 점수판), 오른쪽 (주사위 및 턴 정보) */}
       <div style={{ display: 'flex', gap: '25px', alignItems: 'flex-start' }}>
-        {/* ================= 👈 왼쪽: 족보 점수판 (Scoreboard) ================= */}
+        {/* ================= 📊 왼쪽: 족보 점수판 (Scoreboard) ================= */}
         <div style={{ flex: '1 1 60%', overflowX: 'auto' }}>
           <table
             style={{
@@ -220,7 +245,7 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
                         minWidth: '95px',
                       }}
                     >
-                      {p.nickname} {isTurn && '🎯'}
+                      {p.nickname} {isTurn && '🎲'}
                     </th>
                   );
                 })}
@@ -329,7 +354,7 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
           </table>
         </div>
 
-        {/* ================= 👉 오른쪽: 주사위 & 게임 진행 패널 ================= */}
+        {/* ================= 🎲 오른쪽: 주사위 & 게임 진행 패널 ================= */}
         <div style={{ flex: '1 1 40%', minWidth: '320px', position: 'sticky', top: '20px' }}>
           {/* 상태 패널 */}
           <div
@@ -362,7 +387,7 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
             </div>
           </div>
 
-          {/* 주사위 패널 */}
+          {/* 3D 주사위 패널 */}
           {!game.isFinished && (
             <div
               style={{
@@ -374,80 +399,94 @@ export default function YachtBoard({ roomId, myNickname, onLeave }: YachtBoardPr
                 boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
               }}
             >
-              <h4 style={{ margin: '0 0 15px 0', color: '#ffc107' }}>
-                {isMyTurn ? '🎲 주사위를 클릭하여 Keep 설정' : '상대방 턴 진행 중...'}
-              </h4>
-
-              {/* 주사위 5개 표시 */}
+			
+              {/* 정돈된 2D KEEP 주사위 버튼 목록 */}
               <div
                 style={{
                   display: 'flex',
                   justify: 'center',
-                  gap: '10px',
-                  flexWrap: 'wrap',
-                  marginBottom: '20px',
+                  alignItems: 'center',
+                  gap: '15px',
+                  margin: '15px 0 20px 0',
                 }}
               >
                 {game.dice.map((val, idx) => {
                   const isHeld = held[idx];
                   return (
-                    <div
+                    <button
                       key={idx}
                       onClick={() => handleToggleHold(idx)}
+                      disabled={!canToggleKeep}
                       style={{
-                        width: '56px',
-                        height: '56px',
+                        width: '65px',
+                        height: '65px',
                         backgroundColor: isHeld ? '#ffc107' : '#ffffff',
                         color: isHeld ? '#000' : '#333',
-                        fontSize: '34px',
+                        fontSize: '50px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '10px',
-                        cursor: isMyTurn && game.rollsLeft > 0 ? 'pointer' : 'default',
+                        cursor: canToggleKeep ? 'pointer' : 'not-allowed',
                         boxShadow: isHeld
-                          ? '0 0 10px #ffc107'
-                          : '0 3px 6px rgba(0,0,0,0.2)',
-                        userSelect: 'none',
-                        border: isHeld ? '3px solid #d39e00' : '3px solid #ddd',
+                          ? '0 0 8px #ffc107'
+                          : '0 2px 5px rgba(0,0,0,0.15)',
+                        border: isHeld ? '2px solid #d39e00' : '2px solid #e0e0e0',
+                        opacity: canToggleKeep ? 1 : 0.7,
                         transform: isHeld ? 'scale(1.05)' : 'scale(1)',
                         transition: 'all 0.15s ease-in-out',
+                        padding: 0,
                       }}
                     >
                       <span>{diceFaces[val - 1] || val}</span>
-                      <span style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '-4px' }}>
+                      <span style={{ fontSize: '9px', fontWeight: 'bold', marginTop: '-2px' }}>
                         {isHeld ? 'KEEP' : ''}
                       </span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
+              {/* 3D Babylon.js Canvas */}
+              <div style={{ marginBottom: '15px' }}>
+                <Dice3DCanvas
+                  dice={game.dice}
+                  held={held}
+                  onToggleHold={handleToggleHold}
+                  isMyTurn={isMyTurn}
+                  rollsLeft={game.rollsLeft}
+                  isRolling={isRolling}
+                  onRollComplete={() => setIsRolling(false)}
+                />
+              </div>
+
 
               {/* 굴리기 버튼 */}
               <button
                 onClick={handleRollDice}
-                disabled={!isMyTurn || game.rollsLeft <= 0}
+                disabled={!isMyTurn || game.rollsLeft <= 0 || isRolling}
                 style={{
                   width: '100%',
                   padding: '12px',
                   fontSize: '16px',
                   fontWeight: 'bold',
-                  backgroundColor: !isMyTurn || game.rollsLeft <= 0 ? '#6c757d' : '#28a745',
+                  backgroundColor: !isMyTurn || game.rollsLeft <= 0 || isRolling ? '#6c757d' : '#28a745',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: !isMyTurn || game.rollsLeft <= 0 ? 'not-allowed' : 'pointer',
-                  boxShadow: !isMyTurn || game.rollsLeft <= 0 ? 'none' : '0 4px 6px rgba(40,167,69,0.3)',
+                  cursor: !isMyTurn || game.rollsLeft <= 0 || isRolling ? 'not-allowed' : 'pointer',
+                  boxShadow: !isMyTurn || game.rollsLeft <= 0 || isRolling ? 'none' : '0 4px 6px rgba(40,167,69,0.3)',
                 }}
               >
-                🎲 주사위 굴리기 (남은 횟수: {game.rollsLeft}번)
+                {isRolling ? '🎲 주사위 굴러가는 중...' : `🎲 주사위 굴리기 (남은 횟수: ${game.rollsLeft}번)`}
               </button>
 
               <p style={{ fontSize: '12px', color: '#adb5bd', marginTop: '12px', marginBottom: 0 }}>
-                {isMyTurn
-                  ? '굴린 후 보관할 주사위를 선택하고 다시 굴리거나, 왼쪽 족보를 클릭하여 점수를 기록하세요.'
-                  : '차례를 기다리는 중입니다.'}
+                {!isMyTurn
+                  ? '차례를 기다리는 중입니다.'
+                  : game.rollsLeft === 3
+                  ? '🎲 주사위를 먼저 굴린 후 Keep할 주사위를 선택하세요.'
+                  : '3D 주사위나 아래 버튼을 클릭하여 보관(KEEP)할 주사위를 선택하고 다시 굴리세요.'}
               </p>
             </div>
           )}
