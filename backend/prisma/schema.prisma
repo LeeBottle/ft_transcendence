@@ -12,9 +12,10 @@ model User {
   email       String   @unique
   password    String
   nickname    String   @unique
-  avatar      String?
-  title       String?  @default("초급 슬라이더")
-  isTitleSeen Boolean  @default(false)
+  avatar        String?
+  title         String?  @default("초급 슬라이더")
+  equippedTitle String?
+  isTitleSeen   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

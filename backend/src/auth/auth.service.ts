@@ -46,6 +46,30 @@ export class AuthService {
     };
   }
 
+  async updateTitle(authorization: string | undefined, title: string | null) {
+    const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : null;
+    if (!token) throw new UnauthorizedException('로그인이 필요합니다.');
+
+    let payload: { sub: string };
+    try {
+      payload = this.jwtService.verify(token);
+    } catch {
+      throw new UnauthorizedException('유효하지 않은 로그인입니다.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user) throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    if (title !== null && title !== user.title) {
+      throw new UnauthorizedException('보유하지 않은 칭호입니다.');
+    }
+
+    const { password, ...result } = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { equippedTitle: title },
+    });
+    return { user: result };
+  }
+
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },

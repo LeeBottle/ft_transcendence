@@ -6,6 +6,7 @@ interface LoggedUser {
   email: string;
   nickname: string;
   title?: string;
+  equippedTitle?: string | null;
 }
 
 export default function Navbar() {
@@ -17,7 +18,7 @@ export default function Navbar() {
     if (storedUser) {
       try {
         setAuthProfile(JSON.parse(storedUser));
-      } catch (e) {
+      } catch {
         localStorage.removeItem('user');
         setAuthProfile(null);
       }
@@ -46,26 +47,22 @@ export default function Navbar() {
       </h1>
 
       <div className="flex gap-6 items-center">
-        <Link to="/" className="text-gray-300 hover:text-white font-medium">
-          홈
-        </Link>
-        <Link to="/menu1" className="text-gray-300 hover:text-white font-medium">
-          메뉴 1
-        </Link>
-        <Link to="/menu2" className="text-gray-300 hover:text-white font-medium">
-          메뉴 2
-        </Link>
-        <Link to="/menu3" className="text-gray-300 hover:text-white font-medium">
-          메뉴 3
-        </Link>
+        <Link to="/" className="text-gray-300 hover:text-white font-medium">홈</Link>
+        <Link to="/lobby" className="text-gray-300 hover:text-white font-medium">게임 로비</Link>
+        <Link to="/social" className="text-gray-300 hover:text-white font-medium">소셜</Link>
+        <Link to="/ranking" className="text-gray-300 hover:text-white font-medium">랭킹</Link>
+        <Link to="/drawing" className="text-gray-300 hover:text-white font-medium">그림판</Link>
 
         {authProfile ? (
           <div className="flex items-center gap-3 bg-gray-900 px-3.5 py-1.5 rounded-full border border-green-500 text-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-xs bg-blue-900/80 text-blue-300 px-2 py-0.5 rounded-md border border-blue-700 font-semibold">
-              🏆 {authProfile.title || '초급 슬라이더'}
-            </span>
-            <span className="text-white font-semibold">{authProfile.nickname} 님</span>
+            {authProfile.equippedTitle && (
+              <span className="text-xs bg-blue-900/80 text-blue-300 px-2 py-0.5 rounded-md border border-blue-700 font-semibold">
+                🏆 {authProfile.equippedTitle}
+              </span>
+            )}
+            <Link to="/profile" className="text-white font-semibold hover:text-blue-300">
+              {authProfile.nickname} 님
+            </Link>
             <button
               onClick={handleLogout}
               className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded transition"
@@ -75,13 +72,8 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex gap-3 items-center">
-            <Link to="/login" className="text-gray-300 hover:text-white font-medium">
-              로그인
-            </Link>
-            <Link
-              to="/signup"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition"
-            >
+            <Link to="/login" className="text-gray-300 hover:text-white font-medium">로그인</Link>
+            <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition">
               회원가입
             </Link>
           </div>

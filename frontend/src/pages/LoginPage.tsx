@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import PuzzleCaptcha from '../components/PuzzleCaptcha';
-import TitleUnlockModal from '../components/TitleUnlockModal';
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onTitleUnlocked: (title: string) => void;
+}
+
+export default function LoginPage({ onTitleUnlocked }: LoginPageProps) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -12,7 +15,6 @@ export default function LoginPage() {
   const [showCaptchaModal, setShowCaptchaModal] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [unlockedTitle, setUnlockedTitle] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,11 +52,8 @@ export default function LoginPage() {
 
       const earnedTitle = data.user.title || '초급 슬라이더';
 
-      if (data.isNewTitle) {
-        setUnlockedTitle(earnedTitle);
-      } else {
-        navigate('/');
-      }
+      navigate('/');
+      if (data.isNewTitle) onTitleUnlocked(earnedTitle);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -67,15 +66,8 @@ export default function LoginPage() {
     executeLogin();
   };
 
-  const handleCloseTitleModal = () => {
-    setUnlockedTitle(null);
-    navigate('/');
-  };
-
   return (
     <div className="flex items-center justify-center py-12 px-4 relative">
-      <TitleUnlockModal title={unlockedTitle} onClose={handleCloseTitleModal} />
-
       <div className="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">로그인</h2>
 
