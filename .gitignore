@@ -1,0 +1,37 @@
+# 의존성 패키지
+node_modules/
+*/node_modules/
+
+# 빌드 산출물 및 캐시
+dist/
+*/dist/
+build/
+*.tsbuildinfo
+.vite/
+
+# 환경 변수 및 시크릿 (단, .env.example은 제외)
+.env
+.env.*
+!.env.example
+*.env
+*/.env
+*/.env.*
+!*/.env.example
+
+# 로그 파일
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 데이터베이스 볼륨
+postgres_data/
+*.sqlite
+*.db
+
+# OS 및 에디터 임시 파일
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
